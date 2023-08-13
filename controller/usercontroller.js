@@ -134,6 +134,7 @@ const deleteUser = async function (req, res) {
 		landlordId: req.body.landlordId,
 		renter_id: req.body.renterId,
 	};
+	console.log(info.landlordId, info.renter_id);
 	if (info.landlordId && info.renter_id) {
 		Renters.findOne({
 			where: {
@@ -161,7 +162,37 @@ const homescreen = async function (req, res) {
 
 //Generate Bill
 const generateBill = function () {
-	let info = {};
+	let info = {
+		renterId: req.body.renterId,
+		landlordId: req.body.landlordId,
+		currentReading: req.body.currentReading,
+	};
+	if (
+		info.renterId.length &&
+		info.landlordId.length &&
+		info.currentReading.length
+	) {
+		Renters.findOne({
+			where: {
+				renter_id: info.renterId,
+				landlordId: info.landlordId,
+			},
+		}).then(async (user) => {
+			if (!user) {
+				res.status(400).json({Message: "No user found"});
+			} else {
+				try {
+					await user.update({
+						currentReading: info.currentReading,
+					});
+					await user.save();
+					res.status(200).json({Message: "Updated"});
+				} catch (e) {
+					res.status(501).json({Message: "something went wrong"});
+				}
+			}
+		});
+	}
 };
 
 module.exports = {
@@ -170,4 +201,5 @@ module.exports = {
 	addRenters,
 	deleteUser,
 	homescreen,
+	generateBill,
 };
